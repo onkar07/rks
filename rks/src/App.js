@@ -1,8 +1,9 @@
-import StudentInfo from './components/studentInfo.js';  
+// import StudentInfo from './components/studentInfo.js';  
+import CreditDebit from './components/creditDebit.js';
 function App() {
   return (
     <div>
-      <StudentInfo />
+      <CreditDebit />
     </div>
   );
 }

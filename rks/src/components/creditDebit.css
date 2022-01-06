@@ -1,0 +1,8 @@
+#debitCredit{
+    display: flex;
+    flex-direction: column;
+    align-content: space-around;
+    align-items: stretch;
+    margin: 10px 20px;
+    font-family: 'Poppins', sans-serif;
+}
