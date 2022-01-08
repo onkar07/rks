@@ -4,6 +4,11 @@ import { db } from '../config/firebase';
 import { getDocs, collection, addDoc, writeBatch, doc } from 'firebase/firestore'
 import { query, orderBy, limit, getDocuments } from "firebase/firestore";
 function FeeEntry() {
+
+    
+    
+
+
     var currentTimeInSeconds = Math.floor(Date.now() / 1000);
     const [month, setMonth] = useState("January")
     var monthly_fee = 1100;
@@ -47,7 +52,7 @@ function FeeEntry() {
             });
             let cn = true;
             for(let i=0; i<recArray.length; i++){
-                if(recArray[i].student_Id == records.student_id, recArray[i].fee_month == records.fee_month){
+                if(recArray[i].student_Id == records.student_id && recArray[i].fee_month == records.fee_month){
                     console.log(recArray[i])
                     if (window.confirm("ह्या महिन्याची फी आधीच भरली आहे, तरीही भरायची का?")) {
                         if(records.fee_amount > 1100){
@@ -55,6 +60,7 @@ function FeeEntry() {
                                 const sfRef = doc(db, "student_fees", recArray[i-1]);
                                 batch.update(sfRef, {"fee_amount": 1100});
                                 console.log("updated")
+                                updateCreditDebit()
                             }
                             catch (err) {
                                 console.log(err)
@@ -81,6 +87,7 @@ function FeeEntry() {
                                         fee_date: records.fee_date
                                     })
                                     if (docRef) alert("Saved")
+                                    updateCreditDebit()
                                 }
                                 catch (err) {
                                     console.log(err)
@@ -96,6 +103,7 @@ function FeeEntry() {
                                         fee_date: records.fee_date
                                     })
                                     if (docRef) alert("Saved")
+                                    updateCreditDebit()
                                 }
                                 catch (err) {
                                     console.log(err)
@@ -109,6 +117,7 @@ function FeeEntry() {
                                 const sfRef = doc(db, "student_fees", recArray[i-1]);
                                 batch.update(sfRef, {"fee_amount": 1100});
                                 console.log("updated")
+                                updateCreditDebit()
                             }
                             catch (err) {
                                 console.log(err)
@@ -143,6 +152,7 @@ function FeeEntry() {
                                 fee_date: records.fee_date
                             })
                             if (docRef) alert("Saved")
+                            updateCreditDebit()
                         }
                         catch (err) {
                             console.log(err)
@@ -158,6 +168,7 @@ function FeeEntry() {
                                 fee_date: records.fee_date
                             })
                             if (docRef) alert("Saved")
+                            updateCreditDebit()
                         }
                         catch (err) {
                             console.log(err)
@@ -174,6 +185,7 @@ function FeeEntry() {
                           fee_date: records.fee_date
                         })
                         if(docRef) alert("Saved")
+                        updateCreditDebit()
                       }
                       catch (err) {
                         console.log(err)
@@ -186,6 +198,62 @@ function FeeEntry() {
           catch (err) {
             console.log(err)
           }
+        }
+    var currentTimeInSeconds = Math.floor(Date.now() / 1000);
+    var bal;
+    var comTime = [];
+    var recArrayLast = []
+    var lastRec = [];
+    var Creditrecords = {
+      time: currentTimeInSeconds,
+      type: "credit",
+      subject: records.student_id + "fee",
+      amount: records.fee_amount,
+      bal: 0
+    }
+
+    const lastOne = async () => {
+      try {
+        const snap = await getDocs(collection(db, 'debitCredit'));
+        snap.forEach((doc) => {
+          var data = (doc.id, " => ", doc.data())
+          recArrayLast.push(data);
+        });
+        recArrayLast.forEach(rec => {
+          comTime.push(rec.time)
+        })
+        comTime.sort()
+        var letest_time = comTime[comTime.length - 1]
+        recArrayLast.forEach(rec => {
+          if (rec.time == letest_time)
+            lastRec = rec
+        })
+      }
+      catch (err) {
+        console.log(err)
+      }
+    }
+     async function updateCreditDebit(){
+      await lastOne()
+      console.log(lastRec)
+        let baled = lastRec.oldBal + Number(records.fee_amount);
+        console.log("baled",baled)
+      
+      try {
+        const docRef = await addDoc(collection(db, 'debitCredit'), {
+          Type: Creditrecords.type,
+          subject: Creditrecords.subject,
+          amount: Number(records.fee_amount),
+          time: Creditrecords.time,
+          oldBal: baled
+        })
+        alert("Saved in CreditDebit from fee")
+        console.log(Creditrecords)
+      }
+      catch (err) {
+        console.log(err)
+        alert("Falied in CreditDebit from fee")
+      }
     }
 
     return (
