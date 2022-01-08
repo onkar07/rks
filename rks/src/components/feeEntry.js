@@ -217,8 +217,6 @@ function FeeEntry() {
 
                     </select>
                 </div>
-                
-                
                 <button type="button" id="footer" class="btn btn-primary" onClick={(e) => {
                     e.preventDefault();
                     handleSubmit();
