@@ -1,13 +1,25 @@
 import React, { useRef, useState } from 'react'
 import { db } from '../config/firebase';
 // import './creditDebit.css'
-import { getDocs, collection, addDoc, onSnapshot } from 'firebase/firestore'
+import { getDocs, collection, addDoc, writeBatch, doc } from 'firebase/firestore'
 import { query, orderBy, limit, getDocuments } from "firebase/firestore";
 function FeeEntry() {
     var currentTimeInSeconds = Math.floor(Date.now() / 1000);
     const [month, setMonth] = useState("January")
-    // const [dict, setDict] = useState([])
-    
+    var monthly_fee = 1100;
+    const batch = writeBatch(db);
+    var monthArray = ["January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December"]
     var recArray = [];
     var dictt = [];
     var records = {
@@ -29,53 +41,151 @@ function FeeEntry() {
         try {
             const snap = await getDocs(collection(db, 'student_fees'));
             snap.forEach((doc) => {
-              var data = (doc.id, " => ", doc.data())
-              recArray.push(data);
+              var data = (doc.id,doc.id, " => ", doc.data())
+              recArray.push(doc.id, data);
+              
             });
-
-            for(let i=0; i<recArray.length; i++){
-                dictt.push({id:recArray[i].student_Id,month:recArray[i].fee_month})
-            }
             let cn = true;
-            dictt.forEach(drec=>{
-                if(drec.id == records.student_id && drec.month == records.fee_month){
+            for(let i=0; i<recArray.length; i++){
+                if(recArray[i].student_Id == records.student_id, recArray[i].fee_month == records.fee_month){
+                    console.log(recArray[i])
+                    if (window.confirm("ह्या महिन्याची फी आधीच भरली आहे, तरीही भरायची का?")) {
+                        if(records.fee_amount > 1100){
+                            try {
+                                const sfRef = doc(db, "student_fees", recArray[i-1]);
+                                batch.update(sfRef, {"fee_amount": 1100});
+                                console.log("updated")
+                            }
+                            catch (err) {
+                                console.log(err)
+                                alert("Falied")
+                            }
+                            var new_fee_amount = records.fee_amount - 1100;
+                            if(new_fee_amount > 1){
+
+                            let reminder = Number(new_fee_amount) % 1100;
+                            let Doloop = Math.floor(Number(new_fee_amount) / 1100);
+                            let month_count_u;
+                            console.log(Doloop)
+                            for(let i=0; i<12; i++){
+                                if(records.fee_month == monthArray[i]){
+                                    month_count_u = i;
+                                }
+                            }
+                            for(let i=0; i<Doloop; i++){
+                                try {
+                                    const docRef = await addDoc(collection(db, 'student_fees'), {
+                                        student_Id: records.student_id,
+                                        fee_amount: 1100,
+                                        fee_month: monthArray[i + 1 + month_count_u],
+                                        fee_date: records.fee_date
+                                    })
+                                    if (docRef) alert("Saved")
+                                }
+                                catch (err) {
+                                    console.log(err)
+                                    alert("Falied")
+                                }
+                            }
+                            if(reminder > 0){
+                                try {
+                                    const docRef = await addDoc(collection(db, 'student_fees'), {
+                                        student_Id: records.student_id,
+                                        fee_amount: reminder,
+                                        fee_month: records.fee_month,
+                                        fee_date: records.fee_date
+                                    })
+                                    if (docRef) alert("Saved")
+                                }
+                                catch (err) {
+                                    console.log(err)
+                                    alert("Falied")
+                                }
+                            }
+                        }
+                        }
+                        else{
+                            try {
+                                const sfRef = doc(db, "student_fees", recArray[i-1]);
+                                batch.update(sfRef, {"fee_amount": 1100});
+                                console.log("updated")
+                            }
+                            catch (err) {
+                                console.log(err)
+                                alert("Falied")
+                            }
+                        }
+                        
+                      } else {
+                        console.log("Declined")
+                      }
                     return cn=false;
                 }
-            })
+                
+            }
             if( cn == true){
-                try {
-            const docRef = await addDoc(collection(db, 'student_fees'), {
-              student_Id: records.student_id,
-              fee_amount: Number(records.fee_amount),
-              fee_month: records.fee_month,
-              fee_date: records.fee_date
-            })
-            if(docRef) alert("Saved")
-          }
-          catch (err) {
-            console.log(err)
-            alert("Falied")
-          }
-        console.log("saved")
+                if(records.fee_amount > 1100){
+                    let reminder = Number(records.fee_amount) % 1100;
+                    let Doloop = Math.floor(Number(records.fee_amount) / 1100);
+                    var month_count = 0;
+                    console.log(Doloop)
+                    for(let i=0; i<12; i++){
+                        if(records.fee_month == monthArray[i]){
+                            month_count = i;
+                        }
+                    }
+                    for(let i=0; i<Doloop; i++){
+                        try {
+                            const docRef = await addDoc(collection(db, 'student_fees'), {
+                                student_Id: records.student_id,
+                                fee_amount: 1100,
+                                fee_month: monthArray[i + 1 + month_count],
+                                fee_date: records.fee_date
+                            })
+                            if (docRef) alert("Saved")
+                        }
+                        catch (err) {
+                            console.log(err)
+                            alert("Falied")
+                        }
+                    }
+                    if(reminder > 0){
+                        try {
+                            const docRef = await addDoc(collection(db, 'student_fees'), {
+                                student_Id: records.student_id,
+                                fee_amount: reminder,
+                                fee_month: records.fee_month,
+                                fee_date: records.fee_date
+                            })
+                            if (docRef) alert("Saved")
+                        }
+                        catch (err) {
+                            console.log(err)
+                            alert("Falied")
+                        }
+                    }
+                }
+                else{
+                    try {
+                          const docRef = await addDoc(collection(db, 'student_fees'), {
+                          student_Id: records.student_id,
+                          fee_amount: Number(records.fee_amount),
+                          fee_month: records.fee_month,
+                          fee_date: records.fee_date
+                        })
+                        if(docRef) alert("Saved")
+                      }
+                      catch (err) {
+                        console.log(err)
+                        alert("Falied")
+                      }
+                }
+            console.log("saved")
             }
           }
           catch (err) {
             console.log(err)
           }
-
-        // try {
-        //     const docRef = await addDoc(collection(db, 'student_fees'), {
-        //       student_Id: records.student_id,
-        //       fee_amount: Number(records.fee_amount),
-        //       fee_month: records.fee_month,
-        //       fee_date: records.fee_date
-        //     })
-        //     if(docRef) alert("Saved")
-        //   }
-        //   catch (err) {
-        //     console.log(err)
-        //     alert("Falied")
-        //   }
     }
 
     return (
